@@ -43,4 +43,4 @@ def generate_response(user_query, chat_history):
     :return: The generated response.
     """
     result = coversational_rag_chain.invoke({"input": user_query, "chat_history": chat_history})
-    return result["answer"]
+    return result["answer"].strip()

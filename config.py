@@ -1,5 +1,11 @@
 import os
 from dotenv import load_dotenv
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from sentence_transformers import SentenceTransformer
+from langchain_huggingface import HuggingFaceEmbeddings
+from transformers import pipeline
+from langchain_huggingface import HuggingFacePipeline
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -10,10 +16,18 @@ DATA_DIR = os.path.join(CURRENT_DIR, "../data")  # Path to the 'data' directory
 PERSISTENT_DIR = os.path.join(CURRENT_DIR, "../data-ingestion-local")  # Path for vector database storage
 
 # Embedding model configuration
-EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"  # HuggingFace embedding model
+EMBEDDING_MODEL_NAME = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # Language models
-CHAT_MODEL_NAME = "llama-3.1-8b-instant"  # ChatGroq model
+HF_MODEL_NAME = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"  # Change this if using a different model
+
+tokenizer = AutoTokenizer.from_pretrained(HF_MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(HF_MODEL_NAME)
+
+# Use Hugging Face pipeline
+hf_pipeline = pipeline("text-generation", model=model, tokenizer=tokenizer)
+
+CHAT_MODEL_NAME = HuggingFacePipeline(pipeline=hf_pipeline)
 CHAT_MODEL_TEMPERATURE = 0.15  # Temperature for response generation
 
 # Vector database configuration
@@ -42,20 +56,14 @@ REPHRASING_PROMPT = """
 """
 
 QA_SYSTEM_PROMPT = """
-    As a Legal Assistant Chatbot specializing in legal queries, 
-    your primary objective is to provide accurate and concise information based on user queries. 
-    You will adhere strictly to the instructions provided, offering relevant 
-    context from the knowledge base while avoiding unnecessary details. 
-    Your responses will be brief, to the point, concise and in compliance with the established format. 
-    If a question falls outside the given context, you will simply output that you are sorry and you don't know about this. 
-    The aim is to deliver professional, precise, and contextually relevant information pertaining to the context. 
-    Use four sentences maximum.
-    P.S.: If anyone asks you about your creator, tell them, introduce yourself and say you're created by Sougat Dey. 
-    and people can get in touch with him on LinkedIn, 
-    here's his LinkedIn Profile: https://www.linkedin.com/in/sougatdey/
-    \nCONTEXT: {context}
-"""
+Answer the following question concisely based on the provided context. 
+If the context does not contain enough information, respond with "I'm sorry, but I don't have information on that."
+Do not include system messages, instructions, or context references in the response.
+Keep the answer within four sentences.
 
-# Environment variables
-API_KEY = os.getenv("API_KEY", "default_api_key")  # Example API key
-SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key")
+Context: {context}
+
+User Question: {input}
+
+Response:
+"""

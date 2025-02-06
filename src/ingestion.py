@@ -32,7 +32,7 @@ if not os.path.exists(persistent_directory):
     
     ## taking each each item from `pdfs` and loading it using PyPDFLoader
     for pdf in pdfs:
-        loader = PyPDFLoader(file_path=os.path.join("data", pdf),
+        loader = PyPDFLoader(file_path=os.path.join(data_path, pdf),
                              extract_images=False)
         docsRaw = loader.load() ## <- returns a list of `Document` objects. Each such object has - 1. Page Content // 2. Metadata
         for doc in docsRaw:
@@ -47,7 +47,7 @@ if not os.path.exists(persistent_directory):
     print(f"Number of document chunks: {len(docs_split)}", end="\n\n")
 
     ## embedding and vector store
-    embedF = HuggingFaceEmbeddings(model_name = "all-MiniLM-L6-v2") ## <- open-source embedding model from HuggingFace - taking the default model only
+    embedF = HuggingFaceEmbeddings(model_name = "sentence-transformers/all-MiniLM-L6-v2") ## <- open-source embedding model from HuggingFace - taking the default model only
     print("[INFO] Started embedding", end="\n")
     start = time.time() ## <- noting the starting time
 
